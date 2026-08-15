@@ -7,12 +7,14 @@ CFG = json.loads((HERE / "voidfox.json").read_text())
 BRAND = CFG["brand"]
 APP_ID = CFG["application_id"]
 
+
 def replace_once(text, old, new, label):
     if old not in text:
         if new in text:
             return text
         raise RuntimeError(f"Could not find expected {label}: {old!r}")
     return text.replace(old, new, 1)
+
 
 def patch_build_gradle(path):
     text = path.read_text()
@@ -45,6 +47,7 @@ def patch_build_gradle(path):
     )
     path.write_text(text)
 
+
 def neutral_manifest(path):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("""<?xml version="1.0" encoding="utf-8"?>
@@ -52,6 +55,7 @@ def neutral_manifest(path):
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 </manifest>
 """)
+
 
 def patch_static_strings(path, flavor):
     if not path.exists():
@@ -71,6 +75,17 @@ def patch_static_strings(path, flavor):
     )
     path.write_text(text)
 
+
+def remove_resource_siblings(path):
+    """Remove same-named Android resources with a different image extension."""
+    if path.suffix.lower() not in {".png", ".webp"}:
+        return
+    for suffix in (".png", ".webp"):
+        sibling = path.with_suffix(suffix)
+        if sibling != path and sibling.exists():
+            sibling.unlink()
+
+
 def copy_branding(app_dir):
     src = HERE / "branding" / "res"
     dst = app_dir / "src" / "main" / "res"
@@ -79,6 +94,7 @@ def copy_branding(app_dir):
             rel = item.relative_to(src)
             out = dst / rel
             out.parent.mkdir(parents=True, exist_ok=True)
+            remove_resource_siblings(out)
             shutil.copy2(item, out)
 
     # Use the generated transparent emblem directly as the adaptive foreground.
@@ -87,13 +103,16 @@ def copy_branding(app_dir):
     foreground.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(icon_source, foreground)
 
-    # Debug has its own launcher resources upstream, so override those too.
+    # Debug has its own launcher resources upstream. Remove the upstream WebP
+    # equivalents before installing our PNGs; Android treats both extensions as
+    # the same resource name and otherwise fails with "Duplicate resources".
     debug_res = app_dir / "src" / "debug" / "res"
     for density in ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]:
         for name in ["ic_launcher.png", "ic_launcher_round.png"]:
             source = src / f"mipmap-{density}" / name
             out = debug_res / f"mipmap-{density}" / name
             out.parent.mkdir(parents=True, exist_ok=True)
+            remove_resource_siblings(out)
             shutil.copy2(source, out)
 
     for name in ["ic_launcher.xml", "ic_launcher_round.xml"]:
@@ -115,6 +134,7 @@ def copy_overlay(firefox_root):
         out.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(item, out)
 
+
 def patch_fenix_application(path):
     text = path.read_text()
     call = "        org.mozilla.fenix.voidfox.VoidfoxBuiltInExtensions.install(this)\n"
@@ -124,6 +144,7 @@ def patch_fenix_application(path):
             raise RuntimeError("Could not locate Fenix WebExtension initialization hook")
         text = text.replace(needle, needle + "\n" + call, 1)
     path.write_text(text)
+
 
 def main():
     ap = argparse.ArgumentParser(description="Apply Voidfox Android branding to a current Firefox source checkout.")
@@ -161,6 +182,7 @@ def main():
     print(f"Applied {BRAND} Android fork overlay.")
     print(f"Application ID: {APP_ID}")
     print("Build with: ./mach gradle fenix:assembleDebug")
+
 
 if __name__ == "__main__":
     main()
