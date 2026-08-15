@@ -5,6 +5,10 @@ on:
   push:
     paths:
       - ".github/workflows/build-android.yml"
+      - "scripts/**"
+      - "branding/**"
+      - "overlay/**"
+      - "voidfox.json"
 
 permissions:
   contents: read
