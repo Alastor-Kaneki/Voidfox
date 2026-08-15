@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Voidfox GX Mod Archive Downloader",
+  "version": "1.0.0",
+  "description": "Built-in Voidfox integration for exporting GX Store mods as original CRX packages or editable ZIP archives.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "gx-archive-downloader@voidfox"
+    }
+  },
+  "permissions": [
+    "downloads",
+    "https://mods.store.gx.me/mods/*",
+    "https://play.gxc.gg/mods/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://store.gx.me/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
