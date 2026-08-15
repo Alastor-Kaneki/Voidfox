@@ -1,0 +1,21 @@
+{
+  "brand": "Voidfox",
+  "application_id": "dev.alastorkaneki.voidfox",
+  "deep_links": {
+    "debug": "voidfox-dev",
+    "nightly": "voidfox-nightly",
+    "beta": "voidfox-beta",
+    "release": "voidfox"
+  },
+  "upstream": "mozilla-firefox/firefox",
+  "android_app_path": "mobile/android/fenix/app",
+  "built_in_extensions": [
+    {
+      "id": "gx-archive-downloader@voidfox",
+      "name": "GX Mod Archive Downloader",
+      "matches": [
+        "https://store.gx.me/*"
+      ]
+    }
+  ]
+}
