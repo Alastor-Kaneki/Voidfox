@@ -1,0 +1,61 @@
+name: Build Voidfox Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-android.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voidfox-android-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
+      MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+    steps:
+      - name: Checkout Voidfox overlay
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android/sdk/ndk || true
+          sudo rm -rf /opt/ghc /usr/local/.ghcup || true
+          df -h
+
+      - name: Clone Firefox
+        run: git clone --depth 1 --filter=blob:none https://github.com/mozilla-firefox/firefox.git firefox
+
+      - name: Apply Voidfox overlay
+        run: python3 scripts/apply_voidfox.py firefox
+
+      - name: Bootstrap Firefox for Android artifact mode
+        working-directory: firefox
+        run: ./mach bootstrap --application-choice mobile_android_artifact_mode --no-interactive
+
+      - name: Build Voidfox debug APK
+        working-directory: firefox
+        run: ./mach gradle fenix:assembleDebug --no-daemon --stacktrace
+
+      - name: Collect APKs
+        if: always()
+        run: |
+          mkdir -p out
+          find firefox/mobile/android/fenix/app/build/outputs/apk -type f -name '*.apk' -print -exec cp -v {} out/ \; 2>/dev/null || true
+          ls -lah out || true
+
+      - name: Upload APK artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voidfox-android-debug
+          path: out/*.apk
+          if-no-files-found: error
+          retention-days: 3
