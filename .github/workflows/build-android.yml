@@ -19,7 +19,6 @@ jobs:
     timeout-minutes: 120
     env:
       MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
-      MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     steps:
       - name: Checkout Voidfox overlay
         uses: actions/checkout@v4
