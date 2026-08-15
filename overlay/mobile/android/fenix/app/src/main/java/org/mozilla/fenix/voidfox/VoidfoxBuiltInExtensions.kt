@@ -19,7 +19,7 @@ object VoidfoxBuiltInExtensions {
             .ensureBuiltIn(GX_ARCHIVE_EXTENSION_URI, GX_ARCHIVE_EXTENSION_ID)
             .accept(
                 { extension ->
-                    Log.i(TAG, "Built-in extension ready: ${extension.id}")
+                    Log.i(TAG, "Built-in extension ready: ${extension?.id ?: GX_ARCHIVE_EXTENSION_ID}")
                 },
                 { error ->
                     Log.e(TAG, "Unable to install the GX archive downloader", error)
