@@ -47,7 +47,7 @@ jobs:
         if: always()
         run: |
           mkdir -p out
-          find firefox/mobile/android/fenix/app/build/outputs/apk -type f -name '*.apk' -print -exec cp -v {} out/ \; 2>/dev/null || true
+          find firefox -type f -name '*.apk' -print -exec cp -v {} out/ \; 2>/dev/null || true
           ls -lah out || true
 
       - name: Upload APK artifact
