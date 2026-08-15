@@ -39,6 +39,10 @@ jobs:
         working-directory: firefox
         run: ./mach --no-interactive bootstrap --application-choice mobile_android_artifact_mode
 
+      - name: Configure Android artifact build
+        working-directory: firefox
+        run: ./mach configure
+
       - name: Build Voidfox debug APK
         working-directory: firefox
         run: ./mach gradle fenix:assembleDebug --no-daemon --stacktrace
