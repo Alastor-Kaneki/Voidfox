@@ -53,7 +53,18 @@ jobs:
 
       - name: Build Voidfox debug APK
         working-directory: firefox
-        run: ./mach gradle fenix:assembleDebug --no-daemon --stacktrace
+        shell: bash
+        run: |
+          set +e
+          ./mach gradle fenix:assembleDebug --no-daemon --stacktrace > ../fenix-build.log 2>&1
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "===== FENIX FAILURE SUMMARY ====="
+            grep -Ei '(^e: |error:|FAILURE:|What went wrong:|Execution failed|Unresolved reference|Type mismatch|Compilation error)' ../fenix-build.log | tail -n 120 || true
+            echo "===== FENIX FAILURE TAIL ====="
+            tail -n 220 ../fenix-build.log
+          fi
+          exit "$status"
 
       - name: Collect APKs
         if: always()
@@ -61,6 +72,15 @@ jobs:
           mkdir -p out
           find firefox -path '*/gradle/build/mobile/android/fenix/app/outputs/apk/*/*.apk' -type f -print -exec cp -v {} out/ \; 2>/dev/null || true
           ls -lah out || true
+
+      - name: Upload Fenix failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voidfox-fenix-build-log
+          path: fenix-build.log
+          if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload APK artifact
         if: success()
