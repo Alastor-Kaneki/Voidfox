@@ -37,7 +37,7 @@ jobs:
 
       - name: Bootstrap Firefox for Android artifact mode
         working-directory: firefox
-        run: ./mach bootstrap --application-choice mobile_android_artifact_mode --no-interactive
+        run: ./mach --no-interactive bootstrap --application-choice mobile_android_artifact_mode
 
       - name: Build Voidfox debug APK
         working-directory: firefox
