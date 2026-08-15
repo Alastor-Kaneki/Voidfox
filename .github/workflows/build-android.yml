@@ -43,6 +43,10 @@ jobs:
         working-directory: firefox
         run: ./mach configure
 
+      - name: Build Mozilla Android artifacts
+        working-directory: firefox
+        run: ./mach build
+
       - name: Build Voidfox debug APK
         working-directory: firefox
         run: ./mach gradle fenix:assembleDebug --no-daemon --stacktrace
@@ -51,7 +55,7 @@ jobs:
         if: always()
         run: |
           mkdir -p out
-          find firefox -type f -name '*.apk' -print -exec cp -v {} out/ \; 2>/dev/null || true
+          find firefox -path '*/gradle/build/mobile/android/fenix/app/outputs/apk/*/*.apk' -type f -print -exec cp -v {} out/ \; 2>/dev/null || true
           ls -lah out || true
 
       - name: Upload APK artifact
